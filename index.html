@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="tr">
+    <script>
+function disableselect(e)
+{
+return false
+}
+function reEnable()
+{
+return true
+}
+//if IE4+
+document.onselectstart=new Function ("return false")
+ 
+//if NS6
+if (window.sidebar)
+{
+document.onmousedown=disableselect
+document.onclick=reEnable
+}
+</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Beni Affet Aşkım!</title>
+    <style>
+        /* Arka plan ve genel dizilim */
+        body {
+            text-align: center;
+            background: linear-gradient(135deg, #2c3e50, #000000);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Üst Araç Çubuğu - Butonların olduğu yer */
+        #toolbar {
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+        #finish-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(46, 204, 113, 0.9);
+    color: white;
+    padding: 20px 40px;
+    border-radius: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    z-index: 200;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    text-align: center;
+    border: 3px solid white;
+}
+
+        .tool {
+            font-size: 25px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: 0.3s;
+        }
+
+        .tool.active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+            border-color: white;
+        }
+
+        /* Sabır / Can Göstergesi */
+        #status-area {
+            padding: 10px;
+        }
+        #score-val { font-size: 32px; font-weight: bold; color: #2ecc71; }
+
+        /* Oyun Alanı - Senin olduğun yer */
+        #game-container {
+            position: relative;
+            flex: 1; /* Ekranın kalanını kapla */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Senin Fotoğrafın - ben_normal.png */
+        #my-face {
+            max-width: 80%;
+            max-height: 70vh;
+            object-fit: contain;
+            transition: transform 0.1s;
+        }
+        
+
+        /* Fırlatılan Objeler (Eldiven, Domates, Çiçek) */
+        .object-effect {
+            position: absolute;
+            width: 150px;
+            display: none;
+            pointer-events: none;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body>
+
+<div id="toolbar">
+    <button class="tool active" onclick="selectTool('glove', this)">🥊</button>
+    <button class="tool" onclick="selectTool('tomato', this)">🍅</button>
+    <button class="tool" onclick="selectTool('flower', this)">🌹</button>
+</div>
+
+<div id="status-area">
+    <div style="font-size: 14px; opacity: 0.7;">AŞKININ CANI</div>
+    <div id="score-val">100</div>
+</div>
+
+<div id="game-container" onclick="handleAction(event)">
+    <div id="finish-message" style="display: none;">Tebrikler! Beni affettin ❤️</div>
+    <img src="ben_normal.png" id="my-face" alt="Ben">
+    
+    <img src="eldiven.png" id="glove-img" class="object-effect">
+    <img src="domates.png" id="tomato-img" class="object-effect">
+    <img src="cicek.png" id="flower-img" class="object-effect">
+</div>
+
+<script>
+    let health = 100;
+    let selectedTool = 'glove';
+    let isGameOver = false;
+
+    const face = document.getElementById('my-face');
+    const scoreVal = document.getElementById('score-val');
+
+    // Ses Dosyası
+    const sounds = {
+    glove: new Audio('yumruk.mp3'),    // Mevcut dosyan
+    tomato: new Audio('domates.mp3'), // Klasöre eklemen gereken dosya
+    flower: new Audio('cicek.mp3')    // Klasöre eklemen gereken dosya
+};
+
+    function selectTool(tool, btn) {
+        selectedTool = tool;
+        document.querySelectorAll('.tool').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function handleAction(event) {
+        // Oyun bittiyse ve çiçek seçili değilse tıklama yapma
+        if (isGameOver && selectedTool !== 'flower') return;
+
+        // Ses Çal
+        if (sounds[selectedTool]) {
+            sounds[selectedTool].currentTime = 0;
+            sounds[selectedTool].play().catch(e => console.log("Ses dosyası eksik!"));
+        }
+
+        // Tıklanan yerdeki efekti göster
+        const effectImg = document.getElementById(`${selectedTool}-img`);
+        effectImg.style.display = 'block';
+        effectImg.style.left = (event.clientX - 45) + 'px';
+        effectImg.style.top = (event.clientY - 45) + 'px';
+
+        // --- MANTIK ---
+        if (selectedTool === 'flower') {
+            // ÇİÇEK: AFFETME MODU
+            isGameOver = true;
+            health = 100;
+            scoreVal.innerText = "AFFEDİLDİ";
+            scoreVal.style.color = "#2ecc71";
+            
+            face.src = 'ben_normal.png';
+            face.style.transform = 'scale(1.1)';
+            finishMsg.style.display = 'block';
+
+        } else {
+            // YUMRUK VEYA DOMATES: CAN AZALTMA
+            health -= (selectedTool === 'glove') ? 10 : 5;
+            face.style.transform = 'scale(0.9) rotate(5deg)';
+            
+            if (navigator.vibrate) navigator.vibrate(50);
+
+            if (health <= 0) {
+                health = 0;
+                isGameOver = true;
+                face.src = 'ben_dayak.png';
+                scoreVal.innerText = "BİTTİ!";
+                scoreVal.style.color = "#e74c3c";
+            } else {
+                scoreVal.innerText = health;
+                // Renk ayarı
+                scoreVal.style.color = health > 60 ? '#2ecc71' : (health > 25 ? '#f1c40f' : '#e74c3c');
+            }
+        }
+
+        // Efekti gizle
+        setTimeout(() => {
+            effectImg.style.display = 'none';
+            if (!isGameOver) face.style.transform = 'scale(1) rotate(0deg)';
+        }, 200);
+    }
+</script>
+
+</body>
+</html>
